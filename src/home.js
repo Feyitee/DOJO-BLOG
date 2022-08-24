@@ -2,36 +2,35 @@ import { useState, useEffect } from "react";
 import BlogList from "./blogList";
 const Home = () => {
   const [blogs, setBlogs] = useState(null);
+  const [isPending, setIsPending] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:8000")
-      .then((res) => {
-        return res.json;
-      })
-      .then((data) => {
-        setBlogs(data);
-      });
+    setTimeout(() => {
+      fetch("http://localhost:8000")
+        .then((res) => {
+          if (!res.ok) {
+            throw Error("could not fetch dat for that resource");
+          }
+          return res.json;
+        })
+        .then((data) => {
+          setBlogs(data);
+          setIsPending(false);
+          setError(null);
+        })
+        .catch((err) => {
+          setIsPending(false);
+          setError(err.message);
+        });
+    }, 1000);
   }, []);
   return (
     <div className="home">
+      {error && <div>{error}</div>}
+      {isPending && <div>Loading...</div>}
       {blogs && <BlogList blogs={blogs} title="All Blogs" />}
     </div>
   );
 };
-
-// Use Effect whenever there's a re-render, it triggers the state to run again.
-// We can use UseEffect to fire a function after every re render.
-// You don't always want to fire a function after every render, only after a particular render and we use UseEffect Dependencies Array.
-// [] run the function after the first re-render.[name] Run the function after the name changes.
 export default Home;
-
-//Json
-//npx json-server --watch data/db.json --port 800
-// And we open it in a new terminal.
-
-/*Props example
-<BlogList
-  blogs={blogs.filter((blog) => blog.author === "mario")}
-  title="Mario Blogs"
-  handleDelete={handleDelete}
-/>;*/
